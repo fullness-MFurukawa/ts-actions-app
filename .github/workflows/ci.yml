@@ -23,3 +23,11 @@ jobs:
     - name: 依存関係のインストール (npm ci)
       # package-lock.json に基づき、厳密かつ高速にパッケージをインストールする
       run: npm ci
+    
+    # --- ここから下の8行を追加 ---
+    - name: 静的解析 (ESLint)
+      run: npm run lint
+
+    - name: 型チェック (TypeScript)
+      # --noEmitオプションでJSファイルを出力せず、型エラーの有無だけを高速に検証する
+      run: npx tsc --noEmit

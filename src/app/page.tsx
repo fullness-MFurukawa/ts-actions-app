@@ -1,4 +1,6 @@
 import Image from "next/image";
+// 数値型(number)の変数に文字列(string)を代入する（わざと型エラーを起こす）
+const testValue: number = "エラーになります";
 
 export default function Home() {
   return (
