@@ -24,10 +24,14 @@ jobs:
       # package-lock.json に基づき、厳密かつ高速にパッケージをインストールする
       run: npm ci
     
-    # --- ここから下の8行を追加 ---
+    # --- ここから下の10行を追加 ---
     - name: 静的解析 (ESLint)
       run: npm run lint
 
+    - name: コードフォーマット検証 (Prettier) 
+      # --check オプションで、フォーマット違反がある場合、CIを停止させる
+      run: npx prettier --check "src/**/*.{js,jsx,ts,tsx}"
+
     - name: 型チェック (TypeScript)
-      # --noEmitオプションでJSファイルを出力せず、型エラーの有無だけを高速に検証する
+      # --noEmit でコンパイル結果を出力せず、型エラーの有無だけを高速検証する
       run: npx tsc --noEmit
