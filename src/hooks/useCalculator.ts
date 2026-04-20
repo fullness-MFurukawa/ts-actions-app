@@ -44,9 +44,14 @@ export const useCalculator = () => {
 
       // 計算に成功した場合は、結果を状態にセットして画面に反映させる
       setResult(res);
-    } catch (err: any) {
+    } catch (err: unknown) { // any ではなく unknown を使用する（または省略する）
       // 0除算(ゼロで割る)などの例外が発生した場合は、エラーメッセージを画面に表示する
-      setError(err.message);
+      // err が Error オブジェクトかどうかを判定（Type Guard）
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("予期せぬエラーが発生しました");
+      }
     }
   };
 
