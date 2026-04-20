@@ -1,47 +1,54 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
+// より実際のユーザー操作に近いシミュレートを行う userEvent をインポート
+import userEvent from "@testing-library/user-event";
 import { expect, test, describe } from "vitest";
 import Calc from "./Calc";
 
-describe("Calcコンポーネントのテスト", () => {
-  test("値1と値2を入力して加算ができること", () => {
-    // コンポーネントを仮想DOMにレンダリングする
+describe("Calc コンポーネントのテスト", () => {
+  test("値1と値2を入力して加算ができること", async () => {
+    // ユーザーイベントのセットアップ
+    const user = userEvent.setup();
     render(<Calc />);
 
-    // 画面上の要素(ユーザーが見るラベル名などを取得する
     const input1 = screen.getByLabelText("値1");
     const input2 = screen.getByLabelText("値2");
     const button = screen.getByRole("button", { name: "計算する" });
 
-    // ユーザーの操作(入力とクリック)をシミュレートする
-    fireEvent.change(input1, { target: { value: "10" } });
-    fireEvent.change(input2, { target: { value: "20" } });
-    // ※デフォルトが加算なので、Selectの変更は省略
-    fireEvent.click(button);
+    // ユーザーのキーボード入力をシミュレート（非同期）
+    await user.type(input1, "10");
+    await user.type(input2, "20");
+    // ボタンのクリックをシミュレート
+    await user.click(button);
 
-    // 期待する結果が画面に表示されているか(DOMに存在するか)を検証する
-    const resultDisplay = screen.getByTestId("result-display");
+    // テスト対象の要素が出現するのを待機して検証
+    const resultDisplay = await screen.findByTestId("result-display");
     expect(resultDisplay).toHaveTextContent("結果: 30");
   });
 
-  test("0除算を行った際にエラーメッセージが表示されること", () => {
+  test("0除算を行った際にエラーメッセージが表示されること", async () => {
+    const user = userEvent.setup();
     render(<Calc />);
 
     const input1 = screen.getByLabelText("値1");
     const input2 = screen.getByLabelText("値2");
     const button = screen.getByRole("button", { name: "計算する" });
 
-    // 計算の種類を除算に変更する
-    // shadcn/uiのSelectは内部構造が複雑なため、非表示のselect要素を直接変更してシミュレートする
-    const select = screen.getByLabelText("計算の種類");
-    fireEvent.change(select, { target: { value: "div" } });
+    await user.type(input1, "10");
 
-    // 10 ÷ 0 を実行
-    fireEvent.change(input1, { target: { value: "10" } });
-    fireEvent.change(input2, { target: { value: "0" } });
-    fireEvent.click(button);
+    // === shadcn/ui の Select の操作 ===
+    // 1. トリガー（ボタン）をクリックしてドロップダウンメニューを開く
+    const selectTrigger = screen.getByRole("combobox", { name: "計算の種類" });
+    await user.click(selectTrigger);
+
+    // 2. メニューの中から「除算 (÷)」のオプションを探してクリックする
+    const divOption = await screen.findByRole("option", { name: "除算 (÷)" });
+    await user.click(divOption);
+
+    await user.type(input2, "0");
+    await user.click(button);
 
     // エラー表示が出ているか検証する
-    const errorDisplay = screen.getByTestId("error-display");
+    const errorDisplay = await screen.findByTestId("error-display");
     expect(errorDisplay).toHaveTextContent("エラー: 0で割ることはできません");
   });
 });
