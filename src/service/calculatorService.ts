@@ -13,17 +13,17 @@ export const calculatorService = {
   calculate: (val1: number, val2: number, operator: string): number => {
     switch (operator) {
       case "add":
-        return val1 + val2;       // 加算
+        return val1 + val2; // 加算
       case "sub":
-        return val1 - val2;       // 減算
+        return val1 - val2; // 減算
       case "mul":
-        return val1 * val2;       // 乗算
+        return val1 * val2; // 乗算
       case "div":
         if (val2 === 0) throw new Error("0で割ることはできません");
-        return val1 / val2;       // 除算
+        return val1 / val2; // 除算
       case "mod":
         if (val2 === 0) throw new Error("0で割ることはできません");
-        return val1 % val2;       // 剰余
+        return val1 % val2; // 剰余
       default:
         throw new Error("サポートされていない演算子です");
     }

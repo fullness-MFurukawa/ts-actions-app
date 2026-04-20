@@ -9,13 +9,13 @@ export const useCalculator = () => {
   // ユーザーが入力する値（画面の入力欄は文字列なので string 型で管理する）
   const [val1, setVal1] = useState<string>("");
   const [val2, setVal2] = useState<string>("");
-  
+
   // 選択された計算の演算子（初期値は 'add' = 加算）
   const [operator, setOperator] = useState<string>("add");
-  
+
   // 計算結果を保持する状態（未計算時は null）
   const [result, setResult] = useState<number | null>(null);
-  
+
   // エラーメッセージを保持する状態（エラーがない時は null）
   const [error, setError] = useState<string | null>(null);
 
@@ -41,7 +41,7 @@ export const useCalculator = () => {
     try {
       // サービス層のビジネスロジックを呼び出して計算を行う
       const res = calculatorService.calculate(num1, num2, operator);
-      
+
       // 計算に成功した場合は、結果を状態にセットして画面に反映させる
       setResult(res);
     } catch (err: any) {

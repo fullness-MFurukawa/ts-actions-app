@@ -15,12 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 /**
  * 演習7-3 shadcn/uiを使った計算機コンポーネントとテストを追加する
@@ -31,14 +26,14 @@ import {
 export default function Calc() {
   // カスタムHookを呼び出し、画面描画に必要な状態(値)と操作(関数)を取り出す
   const {
-    val1,               // 入力された値1
-    setVal1,            // 値1を更新する関数
-    val2,               // 入力された値2
-    setVal2,            // 値2を更新する関数
-    operator,           // 選択された計算種類
-    setOperator,        // 計算種類を更新する関数
-    result,             // 計算結果
-    error,              // エラーメッセージ
+    val1, // 入力された値1
+    setVal1, // 値1を更新する関数
+    val2, // 入力された値2
+    setVal2, // 値2を更新する関数
+    operator, // 選択された計算種類
+    setOperator, // 計算種類を更新する関数
+    result, // 計算結果
+    error, // エラーメッセージ
     executeCalculation, // 計算を実行する関数
   } = useCalculator();
 
@@ -48,7 +43,7 @@ export default function Calc() {
       <CardHeader>
         <CardTitle className="text-2xl font-bold text-center">計算機</CardTitle>
       </CardHeader>
-      
+
       <CardContent className="space-y-6">
         {/* === 値1の入力エリア === */}
         <div className="space-y-2">
@@ -96,8 +91,8 @@ export default function Calc() {
         </div>
 
         {/* === 計算実行ボタン === */}
-        <Button 
-          className="w-full text-lg font-semibold" 
+        <Button
+          className="w-full text-lg font-semibold"
           // ボタンがクリックされたら、Hookの計算実行関数を呼び出します
           onClick={executeCalculation}
         >
@@ -109,7 +104,10 @@ export default function Calc() {
         {result !== null && (
           <div className="p-4 bg-green-50 border border-green-200 rounded-md">
             {/* data-testidは、後で実行する自動テスト(React Testing Library)で、この要素を見つけやすくするための目印 */}
-            <p className="text-green-800 font-bold text-center" data-testid="result-display">
+            <p
+              className="text-green-800 font-bold text-center"
+              data-testid="result-display"
+            >
               結果: {result}
             </p>
           </div>
@@ -120,7 +118,10 @@ export default function Calc() {
         {error && (
           <div className="p-4 bg-red-50 border border-red-200 rounded-md">
             {/* エラーメッセージ用の目印もテストのために付与 */}
-            <p className="text-red-800 font-bold text-center" data-testid="error-display">
+            <p
+              className="text-red-800 font-bold text-center"
+              data-testid="error-display"
+            >
               エラー: {error}
             </p>
           </div>
