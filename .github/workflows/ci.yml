@@ -35,3 +35,7 @@ jobs:
     - name: 型チェック (TypeScript)
       # --noEmit でコンパイル結果を出力せず、型エラーの有無だけを高速検証する
       run: npx tsc --noEmit
+    
+    - name: コンポーネントテストの実行(Vitest & RTL)
+      run: npm run test
+  
