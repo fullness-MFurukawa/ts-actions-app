@@ -16,9 +16,9 @@
         - name: 運用環境へのSSH疎通確認
           uses: appleboy/ssh-action@v1.0.3
           with:
-            host: ${{ secrets.ACTIONS_AZURE_HOST }}
-            username: ${{ secrets.ACTIONS_AZURE_USER }}
-            key: ${{ secrets.ACTIONS_AZURE_SECRET }}
+            host: ${{ secrets.ACTIONS_AWS_HOST }}
+            username: ${{ secrets.ACTIONS_AWS_USER }}
+            key: ${{ secrets.ACTIONS_AWS_SECRET }}
             script: |
               echo "GitHub Actions Runnerからの接続に成功しました。"
               echo "--- System Information ---"
@@ -28,3 +28,46 @@
               echo "--- Runtime Information ---"
               # Node.js ランタイムの存在確認(未インストールの場合はエラーメッセージを出力)
               node -v || echo "Node.js is not installed yet."
+      
+        # 環境構築の自動化（Node.js & PM2）
+        - name: 実行環境のプロビジョニング
+        # SSH接続とリモートコマンド実行を抽象化するアクションを利用
+          uses: appleboy/ssh-action@v1.0.3
+          with:
+            # GitHub Secretsから認証情報を安全に注入（ハードコーディングを防止）
+            host: ${{ secrets.ACTIONS_AWS_HOST }}
+            username: ${{ secrets.ACTIONS_AWS_USER }}
+            key: ${{ secrets.ACTIONS_AWS_SECRET }}
+          
+            # サーバー側で実行する一連のシェルスクリプト
+            script: |
+              echo "--- Environment Provisioning Start ---"
+
+              # Node.js(LTS v20)の導入と冪等性の確保
+              # `command -v node` で既にコマンドが存在するかを判定。
+              # 未導入の場合のみインストール処理を走らせることで、何度実行しても安全な構成(冪等性)にする
+              if ! command -v node &> /dev/null; then
+                echo "Node.js is not found. Installing Node.js LTS..."
+              
+              # NodeSourceの公式リポジトリを追加し、要件を満たすLTS版(v20)のセットアップを行う
+                curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+              
+              # apt-get install に `-y` (yes) オプションを付与し、確認プロンプトによる自動化の停止を防ぐ
+                sudo apt-get install -y nodejs
+              else
+                # 既にインストール済みの場合は、スキップして現在のバージョンを出力
+                echo "Node.js is already installed: $(node -v)"
+              fi
+
+          
+              # PM2(プロセスマネージャ)の導入
+              # Next.jsアプリケーションの常駐化（デーモン化）と自動再起動を担うPM2を導入
+              if ! command -v pm2 &> /dev/null; then
+                echo "PM2 is not found. Installing PM2 globally..."
+              
+                # `-g` (global) オプションを指定し、システムのどこからでもpm2コマンドを叩けるようにする
+                sudo npm install -g pm2
+              else
+                echo "PM2 is already installed: $(pm2 -v)"
+              fi
+              echo "--- Environment Provisioning Completed ---"
