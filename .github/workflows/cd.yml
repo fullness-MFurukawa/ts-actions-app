@@ -155,7 +155,7 @@
               # Nginx リバースプロキシ設定の動的生成
               # sudo tee コマンドを使用して、Nginxの設定ファイルをサーバー上に直接作成します。
               # インターネットからのアクセス(80番)を、先ほどPM2で起動したNext.js(3000番)へ中継(プロキシ)する設定です。
-              sudo tee /etc/nginx/sites-available/nextjs-app > /dev/null <<EOF
+              sudo tee /etc/nginx/sites-available/ts-actions-app > /dev/null <<EOF
               server {
                 listen 80;
                 server_name _;
@@ -176,7 +176,7 @@
 
               # 設定の有効化とNginxの再起動
               # 作成した設定ファイルのシンボリックリンク(ショートカット)を enabled ディレクトリに作成して有効化します。
-              sudo ln -sf /etc/nginx/sites-available/nextjs-app /etc/nginx/sites-enabled/
+              sudo ln -sf /etc/nginx/sites-available/ts-actions-app /etc/nginx/sites-enabled/ts-actions-app
 
               # Nginxインストール時に最初から存在するデフォルトの歓迎画面の設定を削除します。
               sudo rm -f /etc/nginx/sites-enabled/default
