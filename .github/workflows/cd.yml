@@ -1,0 +1,30 @@
+name: Next.js & React Frontend CD
+on:
+  workflow_run:
+    # ※ci.ymlの「name:」で指定している名前と完全に一致させる必要がある
+    workflows: ["Next.js & React Frontend CI"] 
+    types:
+      - completed
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # 運用環境へのSSH疎通確認
+      - name: 運用環境へのSSH疎通確認
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.ACTIONS_AWS_HOST }}
+          username: ${{ secrets.ACTIONS_AWS_USER }}
+          key: ${{ secrets.ACTIONS_AWS_SECRET }}
+          script: |
+            echo "GitHub Actions Runnerからの接続に成功しました。"
+            echo "--- System Information ---"
+            uname -a
+            whoami
+            
+            echo "--- Runtime Information ---"
+            # Node.js ランタイムの存在確認(未インストールの場合はエラーメッセージを出力)
+            node -v || echo "Node.js is not installed yet."
