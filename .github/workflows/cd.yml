@@ -16,9 +16,9 @@
         - name: 運用環境へのSSH疎通確認
           uses: appleboy/ssh-action@v1.0.3
           with:
-            host: ${{ secrets.ACTIONS_AZURE_HOST }}
-            username: ${{ secrets.ACTIONS_AZURE_USER }}
-            key: ${{ secrets.ACTIONS_AZURE_SECRET }}
+            host: ${{ secrets.ACTIONS_AWS_HOST }}
+            username: ${{ secrets.ACTIONS_AWS_USER }}
+            key: ${{ secrets.ACTIONS_AWS_SECRET }}
             script: |
               echo "GitHub Actions Runnerからの接続に成功しました。"
               echo "--- System Information ---"
@@ -35,9 +35,9 @@
           uses: appleboy/ssh-action@v1.0.3
           with:
             # GitHub Secretsから認証情報を安全に注入（ハードコーディングを防止）
-            host: ${{ secrets.ACTIONS_AZURE_HOST }}
-            username: ${{ secrets.ACTIONS_AZURE_USER }}
-            key: ${{ secrets.ACTIONS_AZURE_SECRET }}
+            host: ${{ secrets.ACTIONS_AWS_HOST }}
+            username: ${{ secrets.ACTIONS_AWS_USER }}
+            key: ${{ secrets.ACTIONS_AWS_SECRET }}
           
             # サーバー側で実行する一連のシェルスクリプト
             script: |
@@ -103,15 +103,85 @@
         - name: 運用環境へ成果物を転送
           uses: appleboy/scp-action@v0.1.7
           with:
-            host: ${{ secrets.ACTIONS_AZURE_HOST }}
-            username: ${{ secrets.ACTIONS_AZURE_USER }}
-            key: ${{ secrets.ACTIONS_AZURE_SECRET }}
+            host: ${{ secrets.ACTIONS_AWS_HOST }}
+            username: ${{ secrets.ACTIONS_AWS_USER }}
+            key: ${{ secrets.ACTIONS_AWS_SECRET }}
           
             # 転送元：先ほど準備した standalone ディレクトリの中身すべて
             source: ".next/standalone/*"
           
             # 転送先：サーバー側のデプロイ先パス（ご自身の環境に合わせて変更してください）
-            target: "/home/${{ secrets.ACTIONS_AZURE_USER }}/ts-actions-app"
+            target: "/home/${{ secrets.ACTIONS_AWS_USER }}/ts-actions-app"
           
             # 転送先ディレクトリに余分な階層(.next/standalone/)を作らず、中身だけを直接配置する設定
             strip_components: 2
+
+        # ==========================================
+        # Webサーバーの連携とアプリケーションの起動
+        # ==========================================
+        - name: アプリケーションの起動とプロキシ連携
+          uses: appleboy/ssh-action@v1.0.3
+          with:
+            host: ${{ secrets.ACTIONS_AWS_HOST }}
+            username: ${{ secrets.ACTIONS_AWS_USER }}
+            key: ${{ secrets.ACTIONS_AWS_SECRET }}
+            script: |
+              echo "--- Deployment & Integration Start ---"
+
+              # デプロイ先ディレクトリへの移動
+              # 前のステップ(SCP)で成果物を転送したディレクトリへ移動
+              # このディレクトリを起点として、Next.jsのアプリケーションを起動
+              cd /home/${{ secrets.ACTIONS_AWS_USER }}/ts-actions-app
+
+              # PM2によるプロセス起動と永続化（デーモン化）
+              # 左側(pm2 reload): 既にアプリが起動している場合は、無停止再起動(Zero Downtime Reload)を行う
+              # 右側(pm2 start) : 初回デプロイ等でreloadが失敗した場合に、新規でプロセスを起動
+              # --name: PM2で管理・監視するためのプロセス名を指定
+              # --env PORT: Next.jsが起動するポート番号を明示的に3000番に指定
+              pm2 reload nextjs-app || pm2 start server.js --name "nextjs-app" --env PORT=3000
+
+              # 現在稼働しているプロセスの状態をPM2に保存させます。
+              # これにより、サーバー(OS)自体が再起動した際にも自動でNext.jsが起動
+              pm2 save
+
+              # 3. Nginxのインストール（冪等性の確保）
+              # nginxコマンドが存在しない（未インストール）場合のみインストールを実行します。
+              if ! command -v nginx &> /dev/null; then
+                echo "Nginx is not found. Installing Nginx..."
+                sudo apt-get update
+                sudo apt-get install -y nginx
+              fi
+
+              # Nginx リバースプロキシ設定の動的生成
+              # sudo tee コマンドを使用して、Nginxの設定ファイルをサーバー上に直接作成します。
+              # インターネットからのアクセス(80番)を、先ほどPM2で起動したNext.js(3000番)へ中継(プロキシ)する設定です。
+              sudo tee /etc/nginx/sites-available/nextjs-app > /dev/null <<EOF
+              server {
+                listen 80;
+                server_name _;
+
+                location / {
+                    # 内部の3000番ポートへ通信を横流しします
+                    proxy_pass http://localhost:3000;
+                    
+                    # Next.jsの機能（WebSocketやストリーミング）を正常に動かすためのヘッダー設定です
+                    proxy_http_version 1.1;
+                    proxy_set_header Upgrade \$http_upgrade;
+                    proxy_set_header Connection 'upgrade';
+                    proxy_set_header Host \$host;
+                    proxy_cache_bypass \$http_upgrade;
+                }
+              }
+              EOF
+
+              # 設定の有効化とNginxの再起動
+              # 作成した設定ファイルのシンボリックリンク(ショートカット)を enabled ディレクトリに作成して有効化します。
+              sudo ln -sf /etc/nginx/sites-available/nextjs-app /etc/nginx/sites-enabled/
+
+              # Nginxインストール時に最初から存在するデフォルトの歓迎画面の設定を削除します。
+              sudo rm -f /etc/nginx/sites-enabled/default
+
+              # Nginxを再起動し、新しい設定（3000番へのプロキシ）をシステムに反映させます。
+              sudo systemctl restart nginx
+            
+              echo "--- Deployment & Integration Completed ---"
