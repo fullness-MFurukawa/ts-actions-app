@@ -13,7 +13,7 @@ export const authOptions: NextAuthOptions = {
       // ログイン画面で入力させる項目の定義
       credentials: {
         usernameOrEmail: { label: "UsernameorEmail", type: "text" },
-        password: { label: "Password", type: "password" }
+        password: { label: "Password", type: "password" },
       },
 
       /**
@@ -27,7 +27,7 @@ export const authOptions: NextAuthOptions = {
           const res = await fetch("http://74.226.194.15/api/auth/login", {
             method: "POST",
             body: JSON.stringify({
-              usernameOrEmail: credentials?.usernameOrEmail, 
+              usernameOrEmail: credentials?.usernameOrEmail,
               password: credentials?.password,
             }),
             headers: { "Content-Type": "application/json" },
@@ -43,13 +43,13 @@ export const authOptions: NextAuthOptions = {
           // 【Step3】認証失敗時のエラーハンドリング
           // APIからエラー詳細（JSON）を取得し、内容に応じてメッセージを出し分けます。
           const errorData = await res.json();
-          
+
           // バリデーションエラー(400 Bad Request)の場合
           // C#の標準的なエラー形式（errors.UsernameOrEmail）からメッセージを取り出して通知する
           if (res.status === 400 && errorData.errors?.UsernameOrEmail) {
             throw new Error(errorData.errors.UsernameOrEmail[0]);
           }
-          
+
           // B. ユーザー不在(404)やパスワード間違い(401)の場合
           // APIが返した独自のメッセージがあればそれを採用する
           if (errorData.message) {
@@ -58,22 +58,21 @@ export const authOptions: NextAuthOptions = {
 
           // C. その他の予期せぬ失敗
           throw new Error("ログインに失敗しました。");
-
-        } catch(error: any) {
+        } catch (error: any) {
           // 【Step4】通信エラー等のキャッチ
           // ネットワーク切断や、APIサーバー自体がダウンしている場合の処理
           console.error("★★★ バックエンドAPIとの通信エラー詳細 ★★★", error);
           // 画面側にエラー内容を伝えるため、Errorをスローする
           throw new Error(error.message || "通信エラーが発生しました");
         }
-      }
+      },
     }),
   ],
 
   // 2. カスタムページの定義
   pages: {
     // NextAuth標準のログイン画面ではなく、自作した「/login」ページへリダイレクトさせる
-    signIn: '/login', 
+    signIn: "/login",
   },
 
   // 3. コールバック処理(データの受け渡し設定)

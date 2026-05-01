@@ -9,7 +9,6 @@ export default async function Home() {
 
   return (
     <main className="flex min-h-screen flex-col items-center p-24 bg-zinc-50">
-      
       {/* ログイン状態の確認エリア */}
       <div className="w-full max-w-2xl mb-8 p-4 bg-white rounded-lg shadow-sm border text-center">
         {session ? (
@@ -22,7 +21,10 @@ export default async function Home() {
           // セッションがなければ「未ログイン」と表示
           <div className="flex flex-col items-center gap-2">
             <p className="text-gray-400">未ログイン状態です</p>
-            <Link href="/login" className="text-blue-500 hover:underline font-medium">
+            <Link
+              href="/login"
+              className="text-blue-500 hover:underline font-medium"
+            >
               ログイン画面へ
             </Link>
           </div>

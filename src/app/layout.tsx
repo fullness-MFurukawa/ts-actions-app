@@ -26,14 +26,12 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="ja" 
+      lang="ja"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         {/* NextAuthProviderでアプリ全体(children)を包み込む */}
-        <NextAuthProvider>
-          {children}
-        </NextAuthProvider>
+        <NextAuthProvider>{children}</NextAuthProvider>
       </body>
     </html>
   );

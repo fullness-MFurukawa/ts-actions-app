@@ -15,7 +15,11 @@ import { SessionProvider } from "next-auth/react";
  * 簡単に取り出せる（useSession等が使える)ようになる
  * * @param children - このプロバイダーで包み込む対象のUI(通常はアプリケーション全体)
  */
-export const NextAuthProvider = ({ children }: { children: React.ReactNode }) => {
+export const NextAuthProvider = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
   // SessionProviderでアプリケーション全体(children)をラップして返す
   return <SessionProvider>{children}</SessionProvider>;
 };
