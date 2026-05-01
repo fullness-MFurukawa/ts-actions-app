@@ -136,19 +136,19 @@
               # このディレクトリを起点として、Next.jsのアプリケーションを起動
               cd /home/${{ secrets.ACTIONS_AWS_USER }}/ts-actions-app
 
-              # .envを動的に作成する
+              # 既存プロセスを一度削除（存在しない場合のエラーは || true で無視）
+              pm2 delete ts-actions-app || true
+              # 3000番ポートを強制解放
+              sudo fuser -k 3000/tcp -v -k || true
+          
+              # PM2によるプロセス起動と永続化（デーモン化）
               echo "NEXTAUTH_URL=http://${{ secrets.ACTIONS_AWS_HOST }}" > .env
               echo "NEXTAUTH_SECRET=${{ secrets.AWS_NEXTAUTH_SECRET }}" >> .env
               echo "API_BASE_URL=${{ secrets.AWS_API_BASE_URL }}" >> .env
+              # プロセスを起動
+              pm2 start server.js --name "ts-actions-app" --env PORT=3000
 
-              # PM2によるプロセス起動と永続化（デーモン化）
-              # 左側(pm2 reload): 既にアプリが起動している場合は、無停止再起動(Zero Downtime Reload)を行う
-              # 右側(pm2 start) : 初回デプロイ等でreloadが失敗した場合に、新規でプロセスを起動
-              # --name: PM2で管理・監視するためのプロセス名を指定
-              # --env PORT: Next.jsが起動するポート番号を明示的に3000番に指定
-              pm2 reload ts-actions-app --update-env || pm2 start server.js --name "ts-actions-app" --env PORT=3000
-              
-              # 現在稼働しているプロセスの状態をPM2に保存させます。
+              # 現在稼働しているプロセスの状態をPM2に保存
               # これにより、サーバー(OS)自体が再起動した際にも自動でNext.jsが起動
               pm2 save
 

@@ -91,7 +91,6 @@ export const authOptions: NextAuthOptions = {
       }
       return token;
     },
-
     /**
      * セッションの参照時
      * Reactコンポーネント(useSession等)から、トークン内の情報を参照できるようにする
@@ -105,4 +104,6 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
   },
+  // 【追加】本番環境のリダイレクトを有効にするために必須
+  secret: process.env.NEXTAUTH_SECRET,
 };

@@ -18,3 +18,5 @@ const handler = NextAuth(authOptions);
  * 両方でこの認証ハンドラーが動作するように、名前を付けてエクスポートする
  */
 export { handler as GET, handler as POST };
+
+
