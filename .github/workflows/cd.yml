@@ -11,9 +11,12 @@
   jobs:
     deploy:
       # --- CIのワークフローの結果が成功の場合のみ実行する ---
-      if: ${{ github.event.workflow_run.conclusion == 'success' }}
-      
+      #if: ${{ github.event.workflow_run.conclusion == 'success' }}
       runs-on: ubuntu-latest
+
+      # 【追加】このジョブを無条件でスキップ（一時停止）する
+      if: false
+
       steps:
         # 運用環境へのSSH疎通確認
         - name: 運用環境へのSSH疎通確認
