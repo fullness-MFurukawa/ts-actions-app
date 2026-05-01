@@ -1,9 +1,9 @@
 // src/proxy.ts
-import authMiddleware from "next-auth/middleware";
+import { NextFetchEvent } from "next/server";
+import authMiddleware, { NextRequestWithAuth } from "next-auth/middleware";
 
-// 明示的に「proxy」という名前のデフォルト関数を定義
-export default function proxy(req: any, event: any) {
-  // 内部でNextAuthのミドルウェアに処理を委譲
+// anyを排除し、Next.jsとNextAuthが提供する正しい型を設定
+export default function proxy(req: NextRequestWithAuth, event: NextFetchEvent) {
   return authMiddleware(req, event);
 }
 
