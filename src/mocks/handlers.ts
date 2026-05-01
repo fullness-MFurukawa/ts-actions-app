@@ -9,7 +9,11 @@ export const handlers = [
   http.post("http://74.226.194.15/api/auth/login", async ({ request }) => {
     // 【Step1】送信されたデータを解析
     // フロントエンドからfetchで送られてきたJSONボディを取り出す
-    const body = (await request.json()) as any;
+    interface LoginRequestBody {
+      usernameOrEmail?: string;
+      password?: string;
+    }
+    const body = (await request.json()) as LoginRequestBody;
     const { usernameOrEmail, password } = body;
 
     // --- ここから API の振る舞いをシミュレートする ---

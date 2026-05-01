@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
 import { Login } from "./Login";
 import { signIn } from "next-auth/react";
+import { vi, expect, it, describe, type Mock } from "vitest";
 
 // NextAuthのsignIn関数をモックにする
 vi.mock("next-auth/react", () => ({
@@ -19,7 +19,7 @@ vi.mock("next/navigation", () => ({
 describe("Loginコンポーネントのテスト", () => {
   it("パスワードが間違っている場合、エラーメッセージが表示されること", async () => {
     // 1. signIn関数が「パスワード不一致」のエラーを返すように設定
-    (signIn as any).mockResolvedValue({
+    (signIn as Mock).mockResolvedValue({
       error: "パスワードが一致しません。",
       ok: false,
     });

@@ -58,12 +58,14 @@ export const authOptions: NextAuthOptions = {
 
           // C. その他の予期せぬ失敗
           throw new Error("ログインに失敗しました。");
-        } catch (error: any) {
+        } catch (error: unknown) {
           // 【Step4】通信エラー等のキャッチ
           // ネットワーク切断や、APIサーバー自体がダウンしている場合の処理
           console.error("★★★ バックエンドAPIとの通信エラー詳細 ★★★", error);
           // 画面側にエラー内容を伝えるため、Errorをスローする
-          throw new Error(error.message || "通信エラーが発生しました");
+          const errorMessage =
+            error instanceof Error ? error.message : "通信エラーが発生しました";
+          throw new Error(errorMessage);
         }
       },
     }),
@@ -84,7 +86,8 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         // authorizeから返ってきた情報をトークン内にマージする
-        return { ...token, ...user };
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return { ...token, ...(user as any) };
       }
       return token;
     },
@@ -96,6 +99,7 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (session.user) {
         // JWT内に保存されている情報を、セッションのuserオブジェクトとして公開する
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         session.user = token as any;
       }
       return session;
