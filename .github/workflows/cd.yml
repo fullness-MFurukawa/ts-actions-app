@@ -19,9 +19,9 @@
         - name: 運用環境へのSSH疎通確認
           uses: appleboy/ssh-action@v1.0.3
           with:
-            host: ${{ secrets.ACTIONS_AWS_HOST }}
-            username: ${{ secrets.ACTIONS_AWS_USER }}
-            key: ${{ secrets.ACTIONS_AWS_SECRET }}
+            host: ${{ secrets.ACTIONS_AZURE_HOST }}
+            username: ${{ secrets.ACTIONS_AZURE_USER }}
+            key: ${{ secrets.ACTIONS_AZURE_SECRET }}
             script: |
               echo "GitHub Actions Runnerからの接続に成功しました。"
               echo "--- System Information ---"
@@ -38,9 +38,9 @@
           uses: appleboy/ssh-action@v1.0.3
           with:
             # GitHub Secretsから認証情報を安全に注入（ハードコーディングを防止）
-            host: ${{ secrets.ACTIONS_AWS_HOST }}
-            username: ${{ secrets.ACTIONS_AWS_USER }}
-            key: ${{ secrets.ACTIONS_AWS_SECRET }}
+            host: ${{ secrets.ACTIONS_AZURE_HOST }}
+            username: ${{ secrets.ACTIONS_AZURE_USER }}
+            key: ${{ secrets.ACTIONS_AZURE_SECRET }}
           
             # サーバー側で実行する一連のシェルスクリプト
             script: |
@@ -106,15 +106,15 @@
         - name: 運用環境へ成果物を転送
           uses: appleboy/scp-action@v0.1.7
           with:
-            host: ${{ secrets.ACTIONS_AWS_HOST }}
-            username: ${{ secrets.ACTIONS_AWS_USER }}
-            key: ${{ secrets.ACTIONS_AWS_SECRET }}
+            host: ${{ secrets.ACTIONS_AZURE_HOST }}
+            username: ${{ secrets.ACTIONS_AZURE_USER }}
+            key: ${{ secrets.ACTIONS_AZURE_SECRET }}
           
             # 転送元：先ほど準備した standalone ディレクトリの中身すべて
             source: ".next/standalone/*"
           
             # 転送先：サーバー側のデプロイ先パス（ご自身の環境に合わせて変更してください）
-            target: "/home/${{ secrets.ACTIONS_AWS_USER }}/ts-actions-app"
+            target: "/home/${{ secrets.ACTIONS_AZURE_USER }}/ts-actions-app"
           
             # 転送先ディレクトリに余分な階層(.next/standalone/)を作らず、中身だけを直接配置する設定
             strip_components: 2
@@ -125,16 +125,16 @@
         - name: アプリケーションの起動とプロキシ連携
           uses: appleboy/ssh-action@v1.0.3
           with:
-            host: ${{ secrets.ACTIONS_AWS_HOST }}
-            username: ${{ secrets.ACTIONS_AWS_USER }}
-            key: ${{ secrets.ACTIONS_AWS_SECRET }}
+            host: ${{ secrets.ACTIONS_AZURE_HOST }}
+            username: ${{ secrets.ACTIONS_AZURE_USER }}
+            key: ${{ secrets.ACTIONS_AZURE_SECRET }}
             script: |
               echo "--- Deployment & Integration Start ---"
 
               # デプロイ先ディレクトリへの移動
               # 前のステップ(SCP)で成果物を転送したディレクトリへ移動
               # このディレクトリを起点として、Next.jsのアプリケーションを起動
-              cd /home/${{ secrets.ACTIONS_AWS_USER }}/ts-actions-app
+              cd /home/${{ secrets.ACTIONS_AZURE_USER }}/ts-actions-app
 
               # 既存プロセスを一度削除（存在しない場合のエラーは || true で無視）
               pm2 delete ts-actions-app || true
@@ -142,9 +142,9 @@
               sudo fuser -k 3000/tcp -v -k || true
           
               # PM2によるプロセス起動と永続化（デーモン化）
-              echo "NEXTAUTH_URL=http://${{ secrets.ACTIONS_AWS_HOST }}" > .env
-              echo "NEXTAUTH_SECRET=${{ secrets.AWS_NEXTAUTH_SECRET }}" >> .env
-              echo "API_BASE_URL=${{ secrets.AWS_API_BASE_URL }}" >> .env
+              echo "NEXTAUTH_URL=http://${{ secrets.ACTIONS_AZURE_HOST }}" > .env
+              echo "NEXTAUTH_SECRET=${{ secrets.AZURE_NEXTAUTH_SECRET }}" >> .env
+              echo "API_BASE_URL=${{ secrets.AZURE_API_BASE_URL }}" >> .env
               # プロセスを起動
               pm2 start server.js --name "ts-actions-app" --env PORT=3000
 
