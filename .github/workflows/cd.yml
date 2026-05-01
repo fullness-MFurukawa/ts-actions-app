@@ -146,8 +146,8 @@
               # 右側(pm2 start) : 初回デプロイ等でreloadが失敗した場合に、新規でプロセスを起動
               # --name: PM2で管理・監視するためのプロセス名を指定
               # --env PORT: Next.jsが起動するポート番号を明示的に3000番に指定
-              pm2 reload ts-actions-app || pm2 start server.js --name "ts-actions-app" --env PORT=3000
-
+              pm2 reload ts-actions-app --update-env || pm2 start server.js --name "ts-actions-app" --env PORT=3000
+              
               # 現在稼働しているプロセスの状態をPM2に保存させます。
               # これにより、サーバー(OS)自体が再起動した際にも自動でNext.jsが起動
               pm2 save
