@@ -23,8 +23,8 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         try {
           // 【Step1】バックエンドAPIへ認証リクエストを送信
-          // C#等で作成した外部のログインAPIに対して、入力されたIDとパスワードをPOSTする
-          const res = await fetch("http://74.226.194.15/api/auth/login", {
+          //  外部のログインAPIに対して、入力されたIDとパスワードをPOSTする
+          const res = await fetch(`${process.env.API_BASE_URL}/api/auth/login`, {
             method: "POST",
             body: JSON.stringify({
               usernameOrEmail: credentials?.usernameOrEmail,
@@ -104,6 +104,6 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
   },
-  // 【追加】本番環境のリダイレクトを有効にするために必須
+  // 運用環境のリダイレクトを有効にするために必須
   secret: process.env.NEXTAUTH_SECRET,
 };

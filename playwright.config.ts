@@ -76,7 +76,7 @@ export default defineConfig({
     command: 'node .next/standalone/server.js',
     port: 3000,
     reuseExistingServer: !process.env.CI,
-    // ポートが3000番であることを明示する
+    // 【追加】ポートが3000番であることを明示する
     env: {
       PORT: '3000',
     }

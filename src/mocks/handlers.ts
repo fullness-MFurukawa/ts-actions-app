@@ -6,7 +6,7 @@ import { http, HttpResponse } from "msw";
  */
 export const handlers = [
   // http.postはPOSTメソッドの通信を監視することを意味する
-  http.post("http://74.226.194.15/api/auth/login", async ({ request }) => {
+  http.post(`${process.env.API_BASE_URL}/api/auth/login`, async ({ request }) => {
     // 【Step1】送信されたデータを解析
     // フロントエンドからfetchで送られてきたJSONボディを取り出す
     interface LoginRequestBody {
