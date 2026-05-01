@@ -15,6 +15,7 @@ jobs:
       NEXTAUTH_SECRET: "dummy-secret-for-ci"
       NEXTAUTH_URL: "http://localhost:3000"
       API_BASE_URL: "http://localhost:8080"
+      
 
     steps:
     - name: リポジトリのチェックアウト
@@ -52,8 +53,13 @@ jobs:
     - name: アプリケーションのリリース版ビルド
       run: npm run build
 
+    - name: Standalone用の静的ファイルコピー
+      run: |
+        cp -r public .next/standalone/
+        cp -r .next/static .next/standalone/.next/
+
     - name: Playwrightテストの実行 (E2E)
-      run: npx playwright test
+      run: npx playwright test --reporter=list
 
     - name: Playwrightレポートのアップロード
       uses: actions/upload-artifact@v4
