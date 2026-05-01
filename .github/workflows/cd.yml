@@ -10,15 +10,18 @@
 
   jobs:
     deploy:
+      # --- CIのワークフローの結果が成功の場合のみ実行する ---
+      if: ${{ github.event.workflow_run.conclusion == 'success' }}
+      
       runs-on: ubuntu-latest
       steps:
         # 運用環境へのSSH疎通確認
         - name: 運用環境へのSSH疎通確認
           uses: appleboy/ssh-action@v1.0.3
           with:
-            host: ${{ secrets.ACTIONS_AZURE_HOST }}
-            username: ${{ secrets.ACTIONS_AZURE_USER }}
-            key: ${{ secrets.ACTIONS_AZURE_SECRET }}
+            host: ${{ secrets.ACTIONS_AWS_HOST }}
+            username: ${{ secrets.ACTIONS_AWS_USER }}
+            key: ${{ secrets.ACTIONS_AWS_SECRET }}
             script: |
               echo "GitHub Actions Runnerからの接続に成功しました。"
               echo "--- System Information ---"
@@ -35,9 +38,9 @@
           uses: appleboy/ssh-action@v1.0.3
           with:
             # GitHub Secretsから認証情報を安全に注入（ハードコーディングを防止）
-            host: ${{ secrets.ACTIONS_AZURE_HOST }}
-            username: ${{ secrets.ACTIONS_AZURE_USER }}
-            key: ${{ secrets.ACTIONS_AZURE_SECRET }}
+            host: ${{ secrets.ACTIONS_AWS_HOST }}
+            username: ${{ secrets.ACTIONS_AWS_USER }}
+            key: ${{ secrets.ACTIONS_AWS_SECRET }}
           
             # サーバー側で実行する一連のシェルスクリプト
             script: |
@@ -92,7 +95,7 @@
           run: npm run build
 
         # 静的アセットの統合（転送の最適化）
-        # Standalone出力には含まれない public と .next/static をコピーし、
+        # Standalone出力には含まれないpublicと.next/static をコピーし、
         # 1つのフォルダ（.next/standalone）にすべての成果物を集約します。
         - name: デプロイ用成果物の準備
           run: |
@@ -103,15 +106,15 @@
         - name: 運用環境へ成果物を転送
           uses: appleboy/scp-action@v0.1.7
           with:
-            host: ${{ secrets.ACTIONS_AZURE_HOST }}
-            username: ${{ secrets.ACTIONS_AZURE_USER }}
-            key: ${{ secrets.ACTIONS_AZURE_SECRET }}
+            host: ${{ secrets.ACTIONS_AWS_HOST }}
+            username: ${{ secrets.ACTIONS_AWS_USER }}
+            key: ${{ secrets.ACTIONS_AWS_SECRET }}
           
             # 転送元：先ほど準備した standalone ディレクトリの中身すべて
             source: ".next/standalone/*"
           
             # 転送先：サーバー側のデプロイ先パス（ご自身の環境に合わせて変更してください）
-            target: "/home/${{ secrets.ACTIONS_AZURE_USER }}/ts-actions-app"
+            target: "/home/${{ secrets.ACTIONS_AWS_USER }}/ts-actions-app"
           
             # 転送先ディレクトリに余分な階層(.next/standalone/)を作らず、中身だけを直接配置する設定
             strip_components: 2
@@ -122,16 +125,21 @@
         - name: アプリケーションの起動とプロキシ連携
           uses: appleboy/ssh-action@v1.0.3
           with:
-            host: ${{ secrets.ACTIONS_AZURE_HOST }}
-            username: ${{ secrets.ACTIONS_AZURE_USER }}
-            key: ${{ secrets.ACTIONS_AZURE_SECRET }}
+            host: ${{ secrets.ACTIONS_AWS_HOST }}
+            username: ${{ secrets.ACTIONS_AWS_USER }}
+            key: ${{ secrets.ACTIONS_AWS_SECRET }}
             script: |
               echo "--- Deployment & Integration Start ---"
 
               # デプロイ先ディレクトリへの移動
               # 前のステップ(SCP)で成果物を転送したディレクトリへ移動
               # このディレクトリを起点として、Next.jsのアプリケーションを起動
-              cd /home/${{ secrets.ACTIONS_AZURE_USER }}/ts-actions-app
+              cd /home/${{ secrets.ACTIONS_AWS_USER }}/ts-actions-app
+
+              # .envを動的に作成する
+              echo "NEXTAUTH_URL=http://${{ secrets.ACTIONS_AWS_HOST }}" > .env
+              echo "NEXTAUTH_SECRET=${{ secrets.AWS_NEXTAUTH_SECRET }}" >> .env
+              echo "API_BASE_URL=${{ secrets.AWS_API_BASE_URL }}" >> .env
 
               # PM2によるプロセス起動と永続化（デーモン化）
               # 左側(pm2 reload): 既にアプリが起動している場合は、無停止再起動(Zero Downtime Reload)を行う
@@ -145,7 +153,7 @@
               pm2 save
 
               # 3. Nginxのインストール（冪等性の確保）
-              # nginxコマンドが存在しない（未インストール）場合のみインストールを実行します。
+              # nginxコマンドが存在しない(未インストール)場合のみインストールを実行
               if ! command -v nginx &> /dev/null; then
                 echo "Nginx is not found. Installing Nginx..."
                 sudo apt-get update
@@ -153,18 +161,18 @@
               fi
 
               # Nginx リバースプロキシ設定の動的生成
-              # sudo tee コマンドを使用して、Nginxの設定ファイルをサーバー上に直接作成します。
-              # インターネットからのアクセス(80番)を、先ほどPM2で起動したNext.js(3000番)へ中継(プロキシ)する設定です。
+              # sudo tee コマンドを使用して、Nginxの設定ファイルをサーバー上に直接作成
+              # インターネットからのアクセス(80番)を、先ほどPM2で起動したNext.js(3000番)へ中継(プロキシ)する設定
               sudo tee /etc/nginx/sites-available/ts-actions-app > /dev/null <<EOF
               server {
                 listen 80;
                 server_name _;
 
                 location / {
-                    # 内部の3000番ポートへ通信を横流しします
+                    # 内部の3000番ポートへ通信を転送
                     proxy_pass http://localhost:3000;
                     
-                    # Next.jsの機能（WebSocketやストリーミング）を正常に動かすためのヘッダー設定です
+                    # Next.jsの機能（WebSocketやストリーミング）を正常に動かすためのヘッダー設定
                     proxy_http_version 1.1;
                     proxy_set_header Upgrade \$http_upgrade;
                     proxy_set_header Connection 'upgrade';
@@ -175,13 +183,13 @@
               EOF
 
               # 設定の有効化とNginxの再起動
-              # 作成した設定ファイルのシンボリックリンク(ショートカット)を enabled ディレクトリに作成して有効化します。
+              # 作成した設定ファイルのシンボリックリンク(ショートカット)をenabled ディレクトリに作成して有効化する
               sudo ln -sf /etc/nginx/sites-available/ts-actions-app /etc/nginx/sites-enabled/ts-actions-app
 
-              # Nginxインストール時に最初から存在するデフォルトの歓迎画面の設定を削除します。
+              # Nginxインストール時に最初から存在するデフォルトの歓迎画面の設定を削除する
               sudo rm -f /etc/nginx/sites-enabled/default
 
-              # Nginxを再起動し、新しい設定（3000番へのプロキシ）をシステムに反映させます。
+              # Nginxを再起動し、新しい設定(3000番へのプロキシ)をシステムに反映さる
               sudo systemctl restart nginx
             
               echo "--- Deployment & Integration Completed ---"

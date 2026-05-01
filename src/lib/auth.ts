@@ -23,7 +23,7 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         try {
           // 【Step1】バックエンドAPIへ認証リクエストを送信
-          // C#等で作成した外部のログインAPIに対して、入力されたIDとパスワードをPOSTします。
+          // C#等で作成した外部のログインAPIに対して、入力されたIDとパスワードをPOSTする
           const res = await fetch("http://74.226.194.15/api/auth/login", {
             method: "POST",
             body: JSON.stringify({
@@ -34,14 +34,14 @@ export const authOptions: NextAuthOptions = {
           });
 
           // 【Step2】認証成功時の処理(HTTP 200 OK)
-          // APIから返ってきたトークン情報（JWT）を取得し、NextAuthに渡します。
+          // APIから返ってきたトークン情報(JWT)を取得し、NextAuthに渡す
           if (res.ok) {
             const token = await res.json();
-            return token; // ここで返した値が、下のjwtコールバックの「user」に入ります。
+            return token; // ここで返した値が、下のjwtコールバックの「user」に入る
           }
 
           // 【Step3】認証失敗時のエラーハンドリング
-          // APIからエラー詳細（JSON）を取得し、内容に応じてメッセージを出し分けます。
+          // APIからエラー詳細（JSON）を取得し、内容に応じてメッセージを出力しわける
           const errorData = await res.json();
 
           // バリデーションエラー(400 Bad Request)の場合
