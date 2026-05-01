@@ -24,14 +24,17 @@ export const authOptions: NextAuthOptions = {
         try {
           // 【Step1】バックエンドAPIへ認証リクエストを送信
           //  外部のログインAPIに対して、入力されたIDとパスワードをPOSTする
-          const res = await fetch(`${process.env.API_BASE_URL}/api/auth/login`, {
-            method: "POST",
-            body: JSON.stringify({
-              usernameOrEmail: credentials?.usernameOrEmail,
-              password: credentials?.password,
-            }),
-            headers: { "Content-Type": "application/json" },
-          });
+          const res = await fetch(
+            `${process.env.API_BASE_URL}/api/auth/login`,
+            {
+              method: "POST",
+              body: JSON.stringify({
+                usernameOrEmail: credentials?.usernameOrEmail,
+                password: credentials?.password,
+              }),
+              headers: { "Content-Type": "application/json" },
+            },
+          );
 
           // 【Step2】認証成功時の処理(HTTP 200 OK)
           // APIから返ってきたトークン情報(JWT)を取得し、NextAuthに渡す
