@@ -72,9 +72,13 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    // CI環境ではリリース版(start)、ローカルでは開発用(dev)サーバーを起動する
-    command: process.env.CI ? 'npm run start' : 'npm run dev',
-    url: 'http://localhost:3000',
+    // Standaloneビルド用の起動コマンドに変更
+    command: 'node .next/standalone/server.js',
+    port: 3000,
     reuseExistingServer: !process.env.CI,
+    // ポートが3000番であることを明示する
+    env: {
+      PORT: '3000',
+    }
   },
 });
