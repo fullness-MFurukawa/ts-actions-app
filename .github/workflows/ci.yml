@@ -14,6 +14,7 @@ jobs:
     env:
       NEXTAUTH_SECRET: "dummy-secret-for-ci"
       NEXTAUTH_URL: "http://localhost:3000"
+      API_BASE_URL: "http://localhost:8080"
 
     steps:
     - name: リポジトリのチェックアウト
