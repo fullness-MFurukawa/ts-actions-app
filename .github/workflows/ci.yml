@@ -15,6 +15,7 @@ jobs:
       NEXTAUTH_SECRET: "dummy-secret-for-ci"
       NEXTAUTH_URL: "http://localhost:3000"
       API_BASE_URL: "http://localhost:8080"
+      E2E_TEST: "true"
       
 
     steps:
@@ -48,7 +49,7 @@ jobs:
     
     # --- ここから下の行を追加 ---
     - name: Playwrightブラウザのインストール
-      run: npx playwright install --with-deps
+      run: npx playwright install --with-deps 
 
     - name: アプリケーションのリリース版ビルド
       run: npm run build
